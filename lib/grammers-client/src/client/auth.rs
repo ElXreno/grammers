@@ -154,9 +154,9 @@ impl Client {
             Err(InvocationError::Rpc(err)) if err.code == 303 => {
                 let dc_id = err.value.unwrap() as i32;
                 let (sender, request_tx) = connect_sender(dc_id, &self.0.config).await?;
-                *self.0.conn.sender.lock().await = sender;
-                *self.0.conn.request_tx.write().unwrap() = request_tx;
                 {
+                    *self.0.conn.sender.lock().await = sender;
+                    *self.0.conn.request_tx.write().unwrap() = request_tx;
                     let mut state = self.0.state.write().unwrap();
                     state.dc_id = dc_id;
                 }
@@ -233,9 +233,9 @@ impl Client {
                 // before trying again.
                 let dc_id = err.value.unwrap() as i32;
                 let (sender, request_tx) = connect_sender(dc_id, &self.0.config).await?;
-                *self.0.conn.sender.lock().await = sender;
-                *self.0.conn.request_tx.write().unwrap() = request_tx;
                 {
+                    *self.0.conn.sender.lock().await = sender;
+                    *self.0.conn.request_tx.write().unwrap() = request_tx;
                     let mut state = self.0.state.write().unwrap();
                     state.dc_id = dc_id;
                 }
@@ -391,12 +391,12 @@ impl Client {
             }
         }
 
-        let (salt1, salt2, g, p) = params;
+        let (salt1, salt2, p, g) = params;
 
         let g_b = password_info.srp_b.unwrap();
         let a: Vec<u8> = password_info.secure_random;
 
-        let (m1, g_a) = calculate_2fa(salt1, salt2, g, p, g_b, a, password);
+        let (m1, g_a) = calculate_2fa(salt1, salt2, p, g, g_b, a, password);
 
         let check_password = tl::functions::auth::CheckPassword {
             password: tl::enums::InputCheckPasswordSrp::Srp(tl::types::InputCheckPasswordSrp {
