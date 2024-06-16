@@ -41,7 +41,7 @@ impl Chat {
         Self::User(User::from_raw(user))
     }
 
-    pub(crate) fn from_chat(chat: tl::enums::Chat) -> Self {
+    fn _from_raw(chat: tl::enums::Chat) -> Self {
         use tl::enums::Chat as C;
 
         match chat {
@@ -104,9 +104,15 @@ impl Chat {
 
     pub(crate) fn unpack(packed: PackedChat) -> Self {
         match packed.ty {
-            PackedType::User | PackedType::Bot => {
+            PackedType::User => {
                 let mut user = User::from_raw(tl::types::UserEmpty { id: packed.id }.into());
                 user.0.access_hash = packed.access_hash;
+                Chat::User(user)
+            }
+            PackedType::Bot => {
+                let mut user = User::from_raw(tl::types::UserEmpty { id: packed.id }.into());
+                user.0.access_hash = packed.access_hash;
+                user.0.bot = true;
                 Chat::User(user)
             }
             PackedType::Chat => Chat::Group(Group::from_raw(
@@ -198,6 +204,16 @@ impl Chat {
                 })
             }),
         }
+    }
+
+    #[cfg(feature = "unstable_raw")]
+    pub fn from_raw(chat: tl::enums::Chat) -> Self {
+        Self::_from_raw(chat)
+    }
+
+    #[cfg(not(feature = "unstable_raw"))]
+    pub(crate) fn from_raw(chat: tl::enums::Chat) -> Self {
+        Self::_from_raw(chat)
     }
 }
 

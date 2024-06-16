@@ -67,6 +67,7 @@ pub(super) fn update_short_message(
                     }
                     .into(),
                 ),
+                from_boosts_applied: None,
                 peer_id: tl::types::PeerChat {
                     chat_id: short.user_id,
                 }
@@ -88,6 +89,9 @@ pub(super) fn update_short_message(
                 grouped_id: None,
                 restriction_reason: None,
                 ttl_period: short.ttl_period,
+                quick_reply_shortcut_id: None,
+                offline: false,
+                via_business_bot_id: None,
             }
             .into(),
             pts: short.pts,
@@ -123,6 +127,7 @@ pub(super) fn update_short_chat_message(
                     }
                     .into(),
                 ),
+                from_boosts_applied: None,
                 peer_id: tl::types::PeerChat {
                     chat_id: short.chat_id,
                 }
@@ -144,6 +149,9 @@ pub(super) fn update_short_chat_message(
                 grouped_id: None,
                 restriction_reason: None,
                 ttl_period: short.ttl_period,
+                quick_reply_shortcut_id: None,
+                offline: false,
+                via_business_bot_id: None,
             }
             .into(),
             pts: short.pts,
@@ -432,17 +440,17 @@ impl PtsInfo {
             PeerHistoryTtl(_) => None,
             ChatParticipant(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             ChannelParticipant(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             BotStopped(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             GroupCallConnection(_) => None,
@@ -450,7 +458,7 @@ impl PtsInfo {
             PendingJoinRequests(_) => None,
             BotChatInviteRequester(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             MessageReactions(_) => None,
@@ -469,32 +477,54 @@ impl PtsInfo {
             ChannelPinnedTopics(_) => None,
             User(_) => None,
             AutoSaveSettings => None,
-            GroupInvitePrivacyForbidden(_) => None,
             Story(_) => None,
+            NewStoryReaction(_) => None,
             ReadStories(_) => None,
             StoryId(_) => None,
             StoriesStealthMode(_) => None,
             SentStoryReaction(_) => None,
             BotChatBoost(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             ChannelViewForumAsMessages(_) => None,
             PeerWallpaper(_) => None,
             BotMessageReaction(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             BotMessageReactions(u) => Some(Self {
                 pts: u.qts,
-                pts_count: 0,
+                pts_count: 1,
                 entry: Entry::SecretChats,
             }),
             SavedDialogPinned(_) => None,
             PinnedSavedDialogs(_) => None,
             SavedReactionTags => None,
+            SmsJob(_) => None,
+            QuickReplies(_) => None,
+            NewQuickReply(_) => None,
+            DeleteQuickReply(_) => None,
+            QuickReplyMessage(_) => None,
+            DeleteQuickReplyMessages(_) => None,
+            BotBusinessConnect(_) => None,
+            BotNewBusinessMessage(u) => Some(Self {
+                pts: u.qts,
+                pts_count: 1,
+                entry: Entry::SecretChats,
+            }),
+            BotEditBusinessMessage(u) => Some(Self {
+                pts: u.qts,
+                pts_count: 1,
+                entry: Entry::SecretChats,
+            }),
+            BotDeleteBusinessMessage(u) => Some(Self {
+                pts: u.qts,
+                pts_count: u.messages.len() as i32,
+                entry: Entry::SecretChats,
+            }),
         }
         .filter(|info| info.pts != NO_PTS)
     }

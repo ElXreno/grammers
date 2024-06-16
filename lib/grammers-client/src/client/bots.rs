@@ -40,6 +40,7 @@ impl InlineResult {
                 id: self.id().to_string(),
                 schedule_date: None,
                 send_as: None,
+                quick_reply_shortcut: None,
             })
             .await
             .map(drop)
@@ -104,7 +105,7 @@ impl InlineResultIter {
             next_offset,
             results,
             ..
-        }) = dbg!(self.client.invoke(&self.request).await?);
+        }) = self.client.invoke(&self.request).await?;
 
         if let Some(offset) = next_offset {
             self.request.offset = offset;

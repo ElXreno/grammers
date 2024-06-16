@@ -73,6 +73,14 @@ impl ChatHashCache {
         }
     }
 
+    fn has_requested_peer(&self, peer: &tl::enums::RequestedPeer) -> bool {
+        match peer {
+            tl::enums::RequestedPeer::User(user) => self.has(user.user_id),
+            tl::enums::RequestedPeer::Chat(_chat) => true, // no hash needed, so we always have it
+            tl::enums::RequestedPeer::Channel(channel) => self.has(channel.channel_id),
+        }
+    }
+
     fn has_user(&self, peer: &tl::enums::InputUser) -> bool {
         match peer {
             tl::enums::InputUser::Empty => true,
@@ -353,8 +361,8 @@ impl ChatHashCache {
                 U::ChannelPinnedTopics(u) => self.has(u.channel_id),
                 U::User(u) => self.has(u.user_id),
                 U::AutoSaveSettings => true,
-                U::GroupInvitePrivacyForbidden(u) => self.has(u.user_id),
                 U::Story(u) => self.has_peer(&u.peer),
+                U::NewStoryReaction(u) => self.has_peer(&u.peer),
                 U::ReadStories(u) => self.has_peer(&u.peer),
                 U::StoryId(_) => true,
                 U::StoriesStealthMode(_) => true,
@@ -367,6 +375,18 @@ impl ChatHashCache {
                 U::SavedDialogPinned(u) => self.has_dialog_peer(&u.peer),
                 U::PinnedSavedDialogs(_) => true,
                 U::SavedReactionTags => true,
+                U::SmsJob(_) => true,
+                U::QuickReplies(_) => true,
+                U::NewQuickReply(_) => true,
+                U::DeleteQuickReply(_) => true,
+                U::QuickReplyMessage(u) => self.extend_from_message(&u.message),
+                U::DeleteQuickReplyMessages(_) => true,
+                U::BotNewBusinessMessage(u) => self.extend_from_message(&u.message),
+                U::BotEditBusinessMessage(u) => self.extend_from_message(&u.message),
+                U::BotDeleteBusinessMessage(_) => true,
+                U::BotBusinessConnect(u) => match &u.connection {
+                    tl::enums::BotBusinessConnection::Connection(con) => self.has(con.user_id),
+                },
             },
             // Telegram should be including all the peers referenced in the updates in
             // `.users` and `.chats`, so no instrospection is done (unlike for `UpdateShort`).
@@ -414,7 +434,7 @@ impl ChatHashCache {
                             Some(p) => self.has_peer(p),
                             None => true,
                         },
-                        Some(MRH::MessageReplyStoryHeader(r)) => self.has(r.user_id),
+                        Some(MRH::MessageReplyStoryHeader(r)) => self.has_peer(&r.peer),
                         None => true,
                     }
                     && match &m.reply_markup {
@@ -499,7 +519,7 @@ impl ChatHashCache {
                             Some(p) => self.has_peer(p),
                             None => true,
                         },
-                        Some(MRH::MessageReplyStoryHeader(r)) => self.has(r.user_id),
+                        Some(MRH::MessageReplyStoryHeader(r)) => self.has_peer(&r.peer),
                         None => true,
                     }
                     && match &m.action {
@@ -542,6 +562,9 @@ impl ChatHashCache {
                         MA::TopicEdit(_) => true,
                         MA::SuggestProfilePhoto(_) => true,
                         MA::RequestedPeer(c) => c.peers.iter().all(|p| self.has_peer(p)),
+                        MA::RequestedPeerSentMe(c) => {
+                            c.peers.iter().all(|p| self.has_requested_peer(p))
+                        }
                         MA::SetChatWallPaper(_) => true,
                         MA::GiftCode(c) => match &c.boost_peer {
                             Some(p) => self.has_peer(p),
@@ -549,6 +572,7 @@ impl ChatHashCache {
                         },
                         MA::GiveawayLaunch => true,
                         MA::GiveawayResults(_) => true,
+                        MA::BoostApply(_) => true,
                     }
             }
         }

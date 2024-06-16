@@ -8,6 +8,9 @@
 
 //! This module gathers all the code generation submodules and coordinates
 //! them, feeding them the right data.
+
+#![deny(unsafe_code)]
+
 mod enums;
 mod grouper;
 mod metadata;
@@ -75,7 +78,7 @@ pub const LAYER: i32 = {};
 /// Return the name from the `.tl` definition corresponding to the provided definition identifier.
 pub fn name_for_id(id: u32) -> &'static str {{
     match id {{
-        "#
+        0x1cb5c415 => "vector","#
         )?;
         for def in definitions {
             writeln!(file, r#"        0x{:x} => "{}","#, def.id, def.full_name())?;

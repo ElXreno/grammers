@@ -7,7 +7,7 @@
 // except according to those terms.
 use crate::types::photo_sizes::{PhotoSize, VecExt};
 use crate::Client;
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use grammers_tl_types as tl;
 use std::fmt::Debug;
 
@@ -207,6 +207,11 @@ impl Photo {
     pub fn is_spoiler(&self) -> bool {
         self.photo.spoiler
     }
+
+    /// Returns TTL seconds if the photo is self-destructive, None otherwise
+    pub fn ttl_seconds(&self) -> Option<i32> {
+        self.photo.ttl_seconds
+    }
 }
 
 impl Document {
@@ -302,9 +307,9 @@ impl Document {
     /// The date on which the file was created, if any.
     pub fn creation_date(&self) -> Option<DateTime<Utc>> {
         match self.document.document.as_ref() {
-            Some(tl::enums::Document::Document(d)) => Some(Utc.from_utc_datetime(
-                &NaiveDateTime::from_timestamp_opt(d.date as i64, 0).expect("date out of range"),
-            )),
+            Some(tl::enums::Document::Document(d)) => {
+                Some(DateTime::<Utc>::from_timestamp(d.date as i64, 0).expect("date out of range"))
+            }
             _ => None,
         }
     }
@@ -536,7 +541,7 @@ impl Poll {
     }
 
     /// Return question of the poll
-    pub fn question(&self) -> &str {
+    pub fn question(&self) -> &grammers_tl_types::enums::TextWithEntities {
         &self.poll.question
     }
 

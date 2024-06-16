@@ -5,13 +5,15 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use crate::mtp::DeserializeError;
+#[cfg(any(feature = "markdown", feature = "html"))]
+mod common;
 
-/// Checks a message buffer for common errors
-pub(crate) fn check_message_buffer(message: &[u8]) -> Result<(), DeserializeError> {
-    if message.len() < 20 {
-        Err(DeserializeError::MessageBufferTooSmall)
-    } else {
-        Ok(())
-    }
-}
+#[cfg(feature = "html")]
+mod html;
+#[cfg(feature = "html")]
+pub use html::{generate_html_message, parse_html_message};
+
+#[cfg(feature = "markdown")]
+mod markdown;
+#[cfg(feature = "markdown")]
+pub use markdown::{generate_markdown_message, parse_markdown_message};

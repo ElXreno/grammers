@@ -5,6 +5,9 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
+#![deny(unsafe_code)]
+
 mod chat;
 mod generated;
 mod message_box;
@@ -165,6 +168,7 @@ impl Session {
             .collect()
     }
 
+    #[must_use]
     pub fn save(&self) -> Vec<u8> {
         enums::Session::Session(self.session.lock().unwrap().clone()).to_bytes()
     }
